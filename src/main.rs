@@ -1,4 +1,5 @@
 mod services;
+mod api;
 
 #[macro_use]
 extern crate serde_derive;
@@ -20,7 +21,8 @@ async fn main() -> std::io::Result<()> {
         App::new()
             // .app_data(web::PayloadConfig::new(2 * 1024 * 1024))
             .wrap(middleware::Logger::default())
-            // .route("/version", web::get().to()
+            .route("/api/weather/today", web::get().to(api::NetologyTTApi::get_weather_today))
+            .route("/api/weather/week_ahead", web::get().to(api::NetologyTTApi::get_weather_week_ahead))
     })
         .workers(4)
         .bind(env::var("SERVER_ADDRESS").unwrap_or("0.0.0.0:80".to_string()))?
