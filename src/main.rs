@@ -10,22 +10,36 @@ extern crate serde_json;
 
 
 use actix_web::{App, HttpServer, web, middleware};
+use std::sync::Arc;
 use std::env;
+
+
+#[derive(Clone)]
+pub struct EnvData {
+    pub openweathermap_key: String,
+    pub weatherapicom_key: String,
+}
 
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init();
     info!("Service started!");
+
+    let env_data = Arc::new(EnvData {
+        openweathermap_key: env::var("OPENWEATHERMAP_KEY").expect("Couldn't read OPENWEATHERMAP_KEY"),
+        weatherapicom_key: env::var("WEATHERAPICOM_KEY").expect("Couldn't read WEATHERAPICOM_KEY")
+    });
+
     HttpServer::new(move || {
         App::new()
-            // .app_data(web::PayloadConfig::new(2 * 1024 * 1024))
+            .data(env_data.clone())
             .wrap(middleware::Logger::default())
             .route("/api/weather/today", web::get().to(api::NetologyTTApi::get_weather_today))
             .route("/api/weather/week_ahead", web::get().to(api::NetologyTTApi::get_weather_week_ahead))
     })
         .workers(4)
-        .bind("0.0.0.0:9999")?
+        .bind("0.0.0.0:9998")?
         .run()
         .await
 }
