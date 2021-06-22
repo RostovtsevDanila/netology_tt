@@ -25,7 +25,7 @@ async fn main() -> std::io::Result<()> {
             .route("/api/weather/week_ahead", web::get().to(api::NetologyTTApi::get_weather_week_ahead))
     })
         .workers(4)
-        .bind(env::var("SERVER_ADDRESS").unwrap_or("0.0.0.0:80".to_string()))?
+        .bind("0.0.0.0:9999")?
         .run()
         .await
 }

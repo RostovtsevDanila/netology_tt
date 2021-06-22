@@ -16,5 +16,6 @@ serde_json = "*"
 log = "*"
 env_logger = "*"
 
-reqwest = {version = "*", features = ["blocking", "multipart"]}
+reqwest = {version = "*", features = ["blocking", "multipart", "json"]}
 chrono = "*"
+futures = "*"

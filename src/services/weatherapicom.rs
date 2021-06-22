@@ -6,7 +6,7 @@ pub struct WeatherAPICom {
 }
 
 impl WeatherService for WeatherAPICom {
-    fn get_weather_today(city: String) -> Result<Weather, ()> {
+    fn get_weather_current(city: String) -> Result<Weather, ()> {
         todo!()
     }
 

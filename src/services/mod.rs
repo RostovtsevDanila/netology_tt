@@ -2,7 +2,10 @@ pub mod openweathermap;
 pub mod weatherapicom;
 
 use chrono::{DateTime, Local};
+use std::fmt::Error;
+use std::future::Future;
 
+#[derive(Debug)]
 pub struct Weather {
     date: DateTime<Local>,
     temperature: f64,
@@ -19,7 +22,7 @@ impl Weather {
 }
 
 pub trait WeatherService {
-    fn get_weather_today(city: String) -> Result<Weather, ()>;
+    fn get_weather_current(city: String) -> Result<Weather, ()>;
     fn get_weather_to_special_day(date: DateTime<Local>, city: String) -> Result<Weather, ()>;
     fn get_weather_week_ahead(city: String)-> Result<Vec<Weather>, ()>;
 }
