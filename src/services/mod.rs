@@ -2,8 +2,6 @@ pub mod openweathermap;
 pub mod weatherapicom;
 
 use chrono::{DateTime, Local};
-use std::fmt::Error;
-use std::future::Future;
 
 #[derive(Debug)]
 pub struct Weather {

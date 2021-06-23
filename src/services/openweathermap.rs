@@ -1,6 +1,5 @@
 use crate::services::{WeatherService, Weather};
 use chrono::{Local, DateTime};
-use reqwest::Client;
 use std::collections::HashMap;
 
 pub struct OpenWeatherMap {}
