@@ -35,7 +35,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .data(env_data.clone())
             .wrap(middleware::Logger::default())
-            .route("/api/weather/current", web::get().to(api::NetologyTTApi::get_weather_current))
+            .route("/api/weather", web::get().to(api::NetologyTTApi::get_weather))
             .route("/api/weather/week_ahead", web::get().to(api::NetologyTTApi::get_weather_week_ahead))
     })
         .workers(4)

@@ -1,13 +1,28 @@
-use crate::services::{WeatherService, WeatherCurrent};
+use crate::services::{WeatherService, Weather};
 use chrono::{Local, NaiveDate, NaiveDateTime};
 use std::collections::{HashMap, BTreeMap};
 
-pub struct OpenWeatherMap {}
 
 #[derive(Deserialize, Clone)]
 struct NominatimResponse {
     lon: String,
     lat: String,
+}
+
+#[derive(Deserialize)]
+struct OpenWeatherMapResponse {
+    daily: Vec<Daily>,
+}
+
+#[derive(Deserialize)]
+struct Daily {
+    dt: i64,
+    temp: Temp,
+}
+
+#[derive(Deserialize)]
+struct Temp {
+    day: f64,
 }
 
 fn get_city_coords(city: String) -> NominatimResponse {
@@ -24,57 +39,38 @@ fn get_city_coords(city: String) -> NominatimResponse {
 }
 
 
-impl WeatherService for OpenWeatherMap {
-    fn get_weather_current(city: String, s_key: String) -> Result<WeatherCurrent, ()> {
-        #[derive(Deserialize)]
-        struct OpenWeatherMapResponse {
-            main: Main,
-        }
+pub struct OpenWeatherMap {}
 
-        #[derive(Deserialize)]
-        struct Main {
-            temp: f64
-        }
-
-        let mut query_params = HashMap::new();
-        query_params.insert("q", city);
-        query_params.insert("appid", s_key);
-
-        let res = reqwest::blocking::Client::new().get("http://api.openweathermap.org/data/2.5/weather")
-            .query(&query_params)
-            .send()
-            .unwrap()
-            .json::<OpenWeatherMapResponse>()
-            .unwrap();
-
-        Ok(
-            WeatherCurrent {
-                datetime: Local::now(),
-                temperature: res.main.temp - 273.15
+impl OpenWeatherMap {
+    pub fn get_weather_in_day(city: String, date: Option<NaiveDate>, s_key: String) -> Result<Weather, ()> {
+        let weathers = Self::get_weather(city, s_key).unwrap();
+        let weather: Weather = match date {
+            Some(d) => {
+                Weather {
+                    date: d,
+                    temperature: weathers.get(&d).unwrap().clone()
+                }
             }
-        )
+            None => {
+                Weather {
+                    date: Local::now().naive_utc().date(),
+                    temperature: weathers.get(&Local::now().naive_utc().date()).unwrap().clone()
+                }
+            }
+        };
+
+        Ok(weather)
     }
 
+    pub fn get_weather_week_ahead(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ()> {
+        Ok(Self::get_weather(city, s_key).unwrap())
+    }
+}
 
-    fn get_weather_week_ahead(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ()> {
+
+impl WeatherService for OpenWeatherMap {
+    fn get_weather(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ()> {
         let coords = get_city_coords(city);
-
-        #[derive(Deserialize)]
-        struct OpenWeatherMapResponse {
-            daily: Vec<Daily>,
-        }
-
-        #[derive(Deserialize)]
-        struct Daily {
-            dt: i64,
-            temp: Temp,
-        }
-
-        #[derive(Deserialize)]
-        struct Temp {
-            day: f64,
-        }
-
         let mut query_params = HashMap::new();
         query_params.insert("lat", coords.lat);
         query_params.insert("lon", coords.lon);
@@ -96,4 +92,3 @@ impl WeatherService for OpenWeatherMap {
         Ok(weathers)
     }
 }
-
