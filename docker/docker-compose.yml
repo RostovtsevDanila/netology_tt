@@ -1,0 +1,25 @@
+version: "3.7"
+
+services:
+  netology:
+    image: netology
+    hostname: netology
+    restart: always
+    environment:
+      - TZ=Europe/Samara
+      - RUST_LOG=debug
+      - OPENWEATHERMAP_KEY={key}
+      - WEATHERAPICOM_KEY={key}
+    ports:
+      - 9998:9998
+    networks:
+      - netology
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+
+networks:
+  netology:
+    driver: bridge
