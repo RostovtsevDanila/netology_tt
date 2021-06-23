@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-actix-web = "*"
+actix-web = "3"
 
 serde = "*"
 serde_derive = "*"
@@ -17,5 +17,5 @@ log = "*"
 env_logger = "*"
 
 reqwest = {version = "*", features = ["blocking", "multipart", "json"]}
-chrono = "*"
+chrono = { version = "*", features = ["serde"] }
 futures = "*"

@@ -1,19 +1,19 @@
 pub mod openweathermap;
 pub mod weatherapicom;
 
-use chrono::{DateTime, Local};
-use std::fmt::Error;
-use std::future::Future;
+use chrono::{DateTime, Local, NaiveDate};
+use std::collections::BTreeMap;
 
-#[derive(Debug)]
-pub struct Weather {
-    date: DateTime<Local>,
+
+pub struct WeatherCurrent {
+    datetime: DateTime<Local>,
     temperature: f64,
 }
 
-impl Weather {
+impl WeatherCurrent {
+    #[allow(dead_code)]
     pub fn date(&self) -> DateTime<Local> {
-        self.date
+        self.datetime
     }
 
     pub fn temperature(&self) -> f64 {
@@ -21,8 +21,8 @@ impl Weather {
     }
 }
 
+
 pub trait WeatherService {
-    fn get_weather_current(city: String, s_key: String) -> Result<Weather, ()>;
-    fn get_weather_to_special_day(date: DateTime<Local>, city: String, s_key: String) -> Result<Weather, ()>;
-    fn get_weather_week_ahead(city: String, s_key: String)-> Result<Vec<Weather>, ()>;
+    fn get_weather_current(city: String, s_key: String) -> Result<WeatherCurrent, ()>;
+    fn get_weather_week_ahead(city: String, s_key: String)-> Result<BTreeMap<NaiveDate, f64>, ()>;
 }
