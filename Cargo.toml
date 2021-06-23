@@ -17,5 +17,5 @@ log = "*"
 env_logger = "*"
 
 reqwest = {version = "*", features = ["blocking", "multipart", "json"]}
-chrono = "*"
+chrono = { version = "*", features = ["serde"] }
 futures = "*"
