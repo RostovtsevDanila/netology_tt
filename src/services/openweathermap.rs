@@ -89,3 +89,86 @@ impl WeatherService for OpenWeatherMap {
         Ok(weathers)
     }
 }
+
+
+#[cfg(test)]
+pub mod openweathermap_tests {
+    use super::*;
+
+    mod get_city_coords_test {
+        use super::*;
+
+        #[actix_rt::test]
+        async fn correct_city() -> Result<(), ()> {
+            match OpenWeatherMap::get_city_coords("Samara".to_string()).await {
+                Ok(_) => Ok(()),
+                Err(_) => Err(())
+            }
+        }
+
+        #[actix_rt::test]
+        async fn incorrect_city() -> Result<(), ()> {
+            match OpenWeatherMap::get_city_coords("hasdkfhk".to_string()).await {
+                Ok(_) => Err(()),
+                Err(e) => Ok(assert_eq!(e.to_string(), ServiceError::NominatimServiceError.to_string()))
+            }
+        }
+    }
+
+    mod get_weather_in_day_test {
+        use super::*;
+        use chrono::Local;
+
+        #[actix_rt::test]
+        async fn correct_city_without_day() -> Result<(), ()> {
+            match OpenWeatherMap::get_weather_in_day("Samara".to_string(), None, std::env::var("OPENWEATHERMAP_KEY").unwrap()).await {
+                Ok(_) => Ok(()),
+                Err(_) => Err(())
+            }
+        }
+
+        #[actix_rt::test]
+        async fn incorrect_city_without_day() -> Result<(), ()> {
+            match OpenWeatherMap::get_weather_in_day("adafsdfasdf".to_string(), None, std::env::var("OPENWEATHERMAP_KEY").unwrap()).await {
+                Ok(_) => Err(()),
+                Err(_) => Ok(())
+            }
+        }
+
+        #[actix_rt::test]
+        async fn correct_city_with_correct_day() -> Result<(), ()> {
+            match OpenWeatherMap::get_weather_in_day("Kazan".to_string(), Some(Local::now().naive_utc().date()), std::env::var("OPENWEATHERMAP_KEY").unwrap()).await {
+                Ok(_) => Ok(()),
+                Err(_) => Err(())
+            }
+        }
+
+        #[actix_rt::test]
+        async fn correct_city_with_incorrect_day() -> Result<(), ()> {
+            match OpenWeatherMap::get_weather_in_day("Kazan".to_string(), Some(Local::now().naive_utc().date() - chrono::Duration::days(1)), std::env::var("OPENWEATHERMAP_KEY").unwrap()).await {
+                Ok(_) => Err(()),
+                Err(_) => Ok(())
+            }
+        }
+    }
+
+    mod get_weather_week_ahead_test {
+        use super::*;
+
+        #[actix_rt::test]
+        async fn correct_city_without_day() -> Result<(), ()> {
+            match OpenWeatherMap::get_weather_week_ahead("Samara".to_string(), std::env::var("OPENWEATHERMAP_KEY").unwrap()).await {
+                Ok(_) => Ok(()),
+                Err(_) => Err(())
+            }
+        }
+
+        #[actix_rt::test]
+        async fn incorrect_city_without_day() -> Result<(), ()> {
+            match OpenWeatherMap::get_weather_week_ahead("adafsdfasdf".to_string(), std::env::var("OPENWEATHERMAP_KEY").unwrap()).await {
+                Ok(_) => Err(()),
+                Err(_) => Ok(())
+            }
+        }
+    }
+}

@@ -43,3 +43,26 @@ async fn main() -> std::io::Result<()> {
         .run()
         .await
 }
+
+
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use actix_web::{test, web, App};
+//
+//     #[actix_rt::test]
+//     async fn get_weather_test() {
+//         // std::thread::spawn(||{main().await});
+//         main();
+//         let client = reqwest::Client::new();
+//
+//         // Act
+//         let response = client
+//             .get("http://localhost:9998/api/weather&city=Samara")
+//             .send()
+//             .await
+//             .expect("Failed to execute request.");
+//     }
+//
+//
+// }

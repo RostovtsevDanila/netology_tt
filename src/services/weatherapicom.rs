@@ -65,3 +65,66 @@ impl WeatherService for WeatherAPICom {
         Ok(weathers)
     }
 }
+
+
+#[cfg(test)]
+pub mod weatherapicom_tests {
+    use super::*;
+
+    mod get_weather_in_day_test {
+        use super::*;
+        use chrono::Local;
+
+        #[actix_rt::test]
+        async fn correct_city_without_day() -> Result<(), ()> {
+            match WeatherAPICom::get_weather_in_day("Samara".to_string(), None, std::env::var("WEATHERAPICOM_KEY").unwrap()).await {
+                Ok(_) => Ok(()),
+                Err(_) => Err(())
+            }
+        }
+
+        #[actix_rt::test]
+        async fn incorrect_city_without_day() -> Result<(), ()> {
+            match WeatherAPICom::get_weather_in_day("adafsdfasdf".to_string(), None, std::env::var("WEATHERAPICOM_KEY").unwrap()).await {
+                Ok(_) => Err(()),
+                Err(_) => Ok(())
+            }
+        }
+
+        #[actix_rt::test]
+        async fn correct_city_with_correct_day() -> Result<(), ()> {
+            match WeatherAPICom::get_weather_in_day("Kazan".to_string(), Some(Local::now().naive_utc().date()), std::env::var("WEATHERAPICOM_KEY").unwrap()).await {
+                Ok(_) => Ok(()),
+                Err(_) => Err(())
+            }
+        }
+
+        #[actix_rt::test]
+        async fn correct_city_with_incorrect_day() -> Result<(), ()> {
+            match WeatherAPICom::get_weather_in_day("Kazan".to_string(), Some(Local::now().naive_utc().date() - chrono::Duration::days(1)), std::env::var("WEATHERAPICOM_KEY").unwrap()).await {
+                Ok(_) => Err(()),
+                Err(_) => Ok(())
+            }
+        }
+    }
+
+    mod get_weather_week_ahead_test {
+        use super::*;
+
+        #[actix_rt::test]
+        async fn correct_city_without_day() -> Result<(), ()> {
+            match WeatherAPICom::get_weather_week_ahead("Samara".to_string(), std::env::var("WEATHERAPICOM_KEY").unwrap()).await {
+                Ok(_) => Ok(()),
+                Err(_) => Err(())
+            }
+        }
+
+        #[actix_rt::test]
+        async fn incorrect_city_without_day() -> Result<(), ()> {
+            match WeatherAPICom::get_weather_week_ahead("adafsdfasdf".to_string(), std::env::var("WEATHERAPICOM_KEY").unwrap()).await {
+                Ok(_) => Err(()),
+                Err(_) => Ok(())
+            }
+        }
+    }
+}

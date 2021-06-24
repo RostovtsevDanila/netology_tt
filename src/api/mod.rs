@@ -44,7 +44,7 @@ struct QueryParams {
     date: Option<NaiveDate>,
 }
 
-pub struct NetologyTTApi {}
+pub struct NetologyTTApi;
 
 impl NetologyTTApi {
     pub async fn get_weather(req: HttpRequest, env_data: web::Data<Arc<EnvData>>) -> impl Responder {
