@@ -1,6 +1,5 @@
 use actix_web::{Responder, HttpRequest, HttpResponse, web};
 use crate::services::openweathermap::OpenWeatherMap;
-use crate::services::WeatherService;
 use crate::services::weatherapicom::WeatherAPICom;
 use crate::EnvData;
 use std::sync::Arc;
@@ -41,28 +40,42 @@ fn intersect_maps_by_key(maps: &Vec<BTreeMap<NaiveDate, f64>>) -> BTreeMap<Naive
 
 #[derive(Deserialize)]
 struct QueryParams {
-    city: String
+    city: String,
+    date: Option<NaiveDate>,
 }
 
-pub struct NetologyTTApi {}
+pub struct NetologyTTApi;
 
 impl NetologyTTApi {
-    pub async fn get_weather_current(req: HttpRequest, env_data: web::Data<Arc<EnvData>>) -> impl Responder {
+    pub async fn get_weather(req: HttpRequest, env_data: web::Data<Arc<EnvData>>) -> impl Responder {
         let query_params = Query::<QueryParams>::from_query(&req.query_string()).unwrap();
-        let weather = vec![
-            OpenWeatherMap::get_weather_current(query_params.city.clone(), env_data.openweathermap_key.clone()).unwrap().temperature(),
-            WeatherAPICom::get_weather_current(query_params.city.clone(), env_data.weatherapicom_key.clone()).unwrap().temperature(),
-        ];
-        let res_weather = weather.iter().sum::<f64>() / weather.len() as f64;
-        HttpResponse::Ok().json(json!({"current_weather": res_weather}))
+
+        let mut weathers = vec![];
+        match OpenWeatherMap::get_weather_in_day(query_params.city.clone(), query_params.date.clone(),env_data.openweathermap_key.clone()).await {
+            Ok(v) => weathers.push(v),
+            Err(e) => return HttpResponse::Ok().json(json!({"Error": e.to_string()}))
+        }
+        match WeatherAPICom::get_weather_in_day(query_params.city.clone(), query_params.date.clone(),env_data.weatherapicom_key.clone()).await {
+            Ok(v) => weathers.push(v),
+            Err(e) => return HttpResponse::Ok().json(json!({"Error": e.to_string()}))
+        }
+
+        let res_weather = weathers.iter().map(|w| w.temperature()).sum::<f64>() / weathers.len() as f64;
+        HttpResponse::Ok().json(json!({"date": weathers[0].date(), "weather": res_weather}))
     }
 
     pub async fn get_weather_week_ahead(req: HttpRequest, env_data: web::Data<Arc<EnvData>> ) -> impl Responder {
         let query_params = Query::<QueryParams>::from_query(&req.query_string()).unwrap();
-        let weathers = vec![
-            WeatherAPICom::get_weather_week_ahead(query_params.city.clone(), env_data.weatherapicom_key.clone()).unwrap(),
-            OpenWeatherMap::get_weather_week_ahead(query_params.city.clone(), env_data.openweathermap_key.clone()).unwrap(),
-        ];
+
+        let mut weathers = vec![];
+        match OpenWeatherMap::get_weather_week_ahead(query_params.city.clone(), env_data.openweathermap_key.clone()).await {
+            Ok(v) => weathers.push(v),
+            Err(e) => return HttpResponse::Ok().json(json!({"Error": e.to_string()}))
+        }
+        match WeatherAPICom::get_weather_week_ahead(query_params.city.clone(), env_data.weatherapicom_key.clone()).await {
+            Ok(v) => weathers.push(v),
+            Err(e) => return HttpResponse::Ok().json(json!({"Error": e.to_string()}))
+        }
         let res_weathers = intersect_maps_by_key(&weathers);
         HttpResponse::Ok().json(res_weathers)
     }
