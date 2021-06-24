@@ -3,6 +3,7 @@ pub mod weatherapicom;
 
 use chrono::{NaiveDate, Local};
 use std::collections::BTreeMap;
+use async_trait::async_trait;
 
 
 pub struct Weather {
@@ -20,10 +21,10 @@ impl Weather {
     }
 }
 
-
+#[async_trait]
 trait WeatherService {
-    fn get_weather(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ()>;
-    fn get_weather_in_date(weathers: BTreeMap<NaiveDate, f64>, date: Option<NaiveDate>) -> Weather {
+    async fn get_weather(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ()>;
+    async fn get_weather_in_date(weathers: BTreeMap<NaiveDate, f64>, date: Option<NaiveDate>) -> Weather {
         match date {
             Some(d) => {
                 Weather {

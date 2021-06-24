@@ -2,6 +2,7 @@ use crate::services::{WeatherService, Weather};
 use chrono::{NaiveDate};
 use std::collections::{HashMap, BTreeMap};
 use reqwest;
+use async_trait::async_trait;
 
 
 #[derive(Deserialize)]
@@ -31,18 +32,19 @@ pub struct WeatherAPICom {
 }
 
 impl WeatherAPICom {
-    pub fn get_weather_in_day(city: String, date: Option<NaiveDate>, s_key: String) -> Result<Weather, ()> {
-        let weathers = Self::get_weather(city, s_key).unwrap();
-        Ok(Self::get_weather_in_date(weathers, date))
+    pub async fn get_weather_in_day(city: String, date: Option<NaiveDate>, s_key: String) -> Result<Weather, ()> {
+        let weathers = Self::get_weather(city, s_key).await.unwrap();
+        Ok(Self::get_weather_in_date(weathers, date).await)
     }
 
-    pub fn get_weather_week_ahead(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ()> {
-        Ok(Self::get_weather(city, s_key).unwrap())
+    pub async fn get_weather_week_ahead(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ()> {
+        Ok(Self::get_weather(city, s_key).await.unwrap())
     }
 }
 
+#[async_trait]
 impl WeatherService for WeatherAPICom {
-    fn get_weather(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ()> {
+    async fn get_weather(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ()> {
         let mut query_params = HashMap::new();
         query_params.insert("q", city);
         query_params.insert("key", s_key);
