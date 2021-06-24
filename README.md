@@ -11,3 +11,23 @@
 - покроете код юнит и функциональными тестами
 - будете отдавать информативные ошибки на запросы API
 - контенеризуете сервис (мы используем Docker и Kubernetes)
+
+## Build and run
+```shell
+env RUST_LOG=debug OPENWEATHERMAP_KEY=key WEATHERAPICOM_KEY=key cargo test
+env RUST_LOG=debug OPENWEATHERMAP_KEY=key WEATHERAPICOM_KEY=key cargo run
+```
+
+## Usage
+```shell
+curl http://localhost:9998/api/weather?city=Samara # Weather today
+curl http://localhost:9998/api/weather?date=2021-06-26&city=Samara # Weather in date
+curl http://localhost:9998/api/weather/week_ahead?city=Samara # Forecast
+```
+
+## Docker
+```shell
+docker buidl -t netology -f docker/Dockerfile .
+cd docker
+docker-compose up
+```
