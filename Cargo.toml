@@ -18,5 +18,4 @@ env_logger = "*"
 
 reqwest = {version = "*", features = ["blocking", "multipart", "json"]}
 chrono = { version = "*", features = ["serde"] }
-#futures = "*"
 async-trait = "*"

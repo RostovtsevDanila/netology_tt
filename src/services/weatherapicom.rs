@@ -1,4 +1,4 @@
-use crate::services::{WeatherService, Weather};
+use crate::services::{WeatherService, Weather, ServiceError};
 use chrono::{NaiveDate};
 use std::collections::{HashMap, BTreeMap};
 use reqwest;
@@ -27,35 +27,37 @@ struct Day {
 }
 
 
-pub struct WeatherAPICom {
-
-}
+pub struct WeatherAPICom;
 
 impl WeatherAPICom {
-    pub async fn get_weather_in_day(city: String, date: Option<NaiveDate>, s_key: String) -> Result<Weather, ()> {
-        let weathers = Self::get_weather(city, s_key).await.unwrap();
-        Ok(Self::get_weather_in_date(weathers, date).await)
+    pub async fn get_weather_in_day(city: String, date: Option<NaiveDate>, s_key: String) -> Result<Weather, ServiceError> {
+        let weathers = Self::get_weather(city, s_key).await?;
+        Ok(Self::get_weather_in_date(weathers, date).await?)
     }
 
-    pub async fn get_weather_week_ahead(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ()> {
-        Ok(Self::get_weather(city, s_key).await.unwrap())
+    pub async fn get_weather_week_ahead(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ServiceError> {
+        Ok(Self::get_weather(city, s_key).await?)
     }
 }
 
 #[async_trait]
 impl WeatherService for WeatherAPICom {
-    async fn get_weather(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ()> {
+    async fn get_weather(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ServiceError> {
         let mut query_params = HashMap::new();
         query_params.insert("q", city);
         query_params.insert("key", s_key);
         query_params.insert("days", "5".to_string());
 
-        let res = reqwest::blocking::Client::new().get("http://api.weatherapi.com/v1/forecast.json")
+        let response = match reqwest::blocking::Client::new().get("http://api.weatherapi.com/v1/forecast.json")
             .query(&query_params)
-            .send()
-            .unwrap()
-            .json::<WeatherAPIComResponse>()
-            .unwrap();
+            .send() {
+            Ok(v) => v,
+            Err(e) => return Err(ServiceError::ExternalServiceError(e))
+        };
+        let res = match response.json::<WeatherAPIComResponse>() {
+            Ok(v) => v,
+            Err(_) => return Err(ServiceError::WeatherServiceError)
+        };
 
         let weathers = res.forecast.forecastday.iter().map(|a|{
             (a.date, a.day.avgtemp_c)

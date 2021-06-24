@@ -4,6 +4,34 @@ pub mod weatherapicom;
 use chrono::{NaiveDate, Local};
 use std::collections::BTreeMap;
 use async_trait::async_trait;
+use std::fmt::Formatter;
+use reqwest::Error;
+
+
+#[derive(Debug)]
+pub enum  ServiceError {
+    WeatherServiceError,
+    NominatimServiceError,
+    ExternalServiceError(reqwest::Error),
+    DateError,
+}
+
+impl std::fmt::Display for ServiceError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match *self {
+            ServiceError::WeatherServiceError => write!(f, "Can't get weather."),
+            ServiceError::NominatimServiceError => write!(f, "Can't get city coordinates."),
+            ServiceError::ExternalServiceError(ref e) => e.fmt(f),
+            ServiceError::DateError => write!(f, "Can't get weather this date."),
+        }
+    }
+}
+
+impl From<reqwest::Error> for ServiceError {
+    fn from(err: Error) -> Self {
+        ServiceError::ExternalServiceError(err)
+    }
+}
 
 
 pub struct Weather {
@@ -23,21 +51,16 @@ impl Weather {
 
 #[async_trait]
 trait WeatherService {
-    async fn get_weather(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ()>;
-    async fn get_weather_in_date(weathers: BTreeMap<NaiveDate, f64>, date: Option<NaiveDate>) -> Weather {
-        match date {
-            Some(d) => {
-                Weather {
-                    date: d,
-                    temperature: weathers.get(&d).unwrap().clone()
-                }
-            }
-            None => {
-                Weather {
-                    date: Local::now().naive_utc().date(),
-                    temperature: weathers.get(&Local::now().naive_utc().date()).unwrap().clone()
-                }
-            }
-        }
+    async fn get_weather(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ServiceError>;
+    async fn get_weather_in_date(weathers: BTreeMap<NaiveDate, f64>, date: Option<NaiveDate>) -> Result<Weather, ServiceError> {
+        let date = match date {
+            Some(d) => d,
+            None => Local::now().naive_utc().date()
+        };
+        let temperature = match weathers.get(&date) {
+            Some(t) => t.clone(),
+            None => return Err(ServiceError::DateError)
+        };
+        Ok(Weather{date, temperature})
     }
 }
