@@ -54,7 +54,7 @@ impl NetologyTTApi {
             WeatherAPICom::get_weather_in_day(query_params.city.clone(), query_params.date.clone(),env_data.weatherapicom_key.clone()).unwrap(),
         ];
         let res_weather = weathers.iter().map(|w| w.temperature()).sum::<f64>() / weathers.len() as f64;
-        HttpResponse::Ok().json(json!({"date": weathers[0].date(), "current_weather": res_weather}))
+        HttpResponse::Ok().json(json!({"date": weathers[0].date(), "today_weather": res_weather}))
     }
 
     pub async fn get_weather_week_ahead(req: HttpRequest, env_data: web::Data<Arc<EnvData>> ) -> impl Responder {

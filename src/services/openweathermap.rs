@@ -1,5 +1,5 @@
 use crate::services::{WeatherService, Weather};
-use chrono::{Local, NaiveDate, NaiveDateTime};
+use chrono::{NaiveDate, NaiveDateTime};
 use std::collections::{HashMap, BTreeMap};
 
 
@@ -25,52 +25,37 @@ struct Temp {
     day: f64,
 }
 
-fn get_city_coords(city: String) -> NominatimResponse {
-    let mut query_params = HashMap::new();
-    query_params.insert("q", city);
-    query_params.insert("format", "json".to_string());
-
-    reqwest::blocking::Client::new().get("http://nominatim.openstreetmap.org/search")
-        .query(&query_params)
-        .send()
-        .unwrap()
-        .json::<Vec<NominatimResponse>>()
-        .unwrap().get(0).unwrap().clone()
-}
-
 
 pub struct OpenWeatherMap {}
 
 impl OpenWeatherMap {
     pub fn get_weather_in_day(city: String, date: Option<NaiveDate>, s_key: String) -> Result<Weather, ()> {
         let weathers = Self::get_weather(city, s_key).unwrap();
-        let weather: Weather = match date {
-            Some(d) => {
-                Weather {
-                    date: d,
-                    temperature: weathers.get(&d).unwrap().clone()
-                }
-            }
-            None => {
-                Weather {
-                    date: Local::now().naive_utc().date(),
-                    temperature: weathers.get(&Local::now().naive_utc().date()).unwrap().clone()
-                }
-            }
-        };
-
-        Ok(weather)
+        Ok(Self::get_weather_in_date(weathers, date))
     }
 
     pub fn get_weather_week_ahead(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ()> {
         Ok(Self::get_weather(city, s_key).unwrap())
+    }
+
+    fn get_city_coords(city: String) -> NominatimResponse {
+        let mut query_params = HashMap::new();
+        query_params.insert("q", city);
+        query_params.insert("format", "json".to_string());
+
+        reqwest::blocking::Client::new().get("http://nominatim.openstreetmap.org/search")
+            .query(&query_params)
+            .send()
+            .unwrap()
+            .json::<Vec<NominatimResponse>>()
+            .unwrap().get(0).unwrap().clone()
     }
 }
 
 
 impl WeatherService for OpenWeatherMap {
     fn get_weather(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ()> {
-        let coords = get_city_coords(city);
+        let coords = Self::get_city_coords(city);
         let mut query_params = HashMap::new();
         query_params.insert("lat", coords.lat);
         query_params.insert("lon", coords.lon);

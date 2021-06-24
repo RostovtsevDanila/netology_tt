@@ -1,7 +1,7 @@
 pub mod openweathermap;
 pub mod weatherapicom;
 
-use chrono::{NaiveDate};
+use chrono::{NaiveDate, Local};
 use std::collections::BTreeMap;
 
 
@@ -23,4 +23,20 @@ impl Weather {
 
 trait WeatherService {
     fn get_weather(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ()>;
+    fn get_weather_in_date(weathers: BTreeMap<NaiveDate, f64>, date: Option<NaiveDate>) -> Weather {
+        match date {
+            Some(d) => {
+                Weather {
+                    date: d,
+                    temperature: weathers.get(&d).unwrap().clone()
+                }
+            }
+            None => {
+                Weather {
+                    date: Local::now().naive_utc().date(),
+                    temperature: weathers.get(&Local::now().naive_utc().date()).unwrap().clone()
+                }
+            }
+        }
+    }
 }

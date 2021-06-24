@@ -1,5 +1,5 @@
 use crate::services::{WeatherService, Weather};
-use chrono::{Local, NaiveDate};
+use chrono::{NaiveDate};
 use std::collections::{HashMap, BTreeMap};
 use reqwest;
 
@@ -33,22 +33,7 @@ pub struct WeatherAPICom {
 impl WeatherAPICom {
     pub fn get_weather_in_day(city: String, date: Option<NaiveDate>, s_key: String) -> Result<Weather, ()> {
         let weathers = Self::get_weather(city, s_key).unwrap();
-        let weather: Weather = match date {
-            Some(d) => {
-                Weather {
-                    date: d,
-                    temperature: weathers.get(&d).unwrap().clone()
-                }
-            }
-            None => {
-                Weather {
-                    date: Local::now().naive_utc().date(),
-                    temperature: weathers.get(&Local::now().naive_utc().date()).unwrap().clone()
-                }
-            }
-        };
-
-        Ok(weather)
+        Ok(Self::get_weather_in_date(weathers, date))
     }
 
     pub fn get_weather_week_ahead(city: String, s_key: String) -> Result<BTreeMap<NaiveDate, f64>, ()> {
